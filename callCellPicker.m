@@ -12,9 +12,9 @@ range = [];             % file number range to examine
 outfile = 'out.mat';        % where to store selection output
 gridsize=[2,2];             % size of image grid for display
 ncat = 2;                   % number of categories
-scale1 = [0,1e4];           % scale for display of first channel
-scale2 = [0,1e4];          % scale for display of second channel
-scale3 = [0,1e4];          % scale for display of thirdq channel
+scale1 = [0,3e4];           % scale for display of first channel
+scale2 = [0,3e4];          % scale for display of second channel
+scale3 = [0,3e4];          % scale for display of thirdq channel
 use_whole_roi = true;      % set this option to true if you want to take 
                             % all of the trajectories from each imaged ROI
                             % rather than only selecting the ones that
@@ -31,7 +31,8 @@ cellpicker(snapfolder,maskfolder,range,outfile,...
     'scale1',scale1,...
     'scale2',scale2,...
     'scale3',scale3,...
-    'use_whole_roi',use_whole_roi);
+    'use_whole_roi',use_whole_roi,...
+    'tightplots',true);
 
 % right arrow - move to next set of FOVs
 % left arrow - move to next set of FOVs
