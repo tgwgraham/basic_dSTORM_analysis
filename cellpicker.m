@@ -293,7 +293,6 @@ while ~quitnow
                 subplotHeight = (1 - (nrows + 1) * vSpacing) / nrows;
                 
                 [currcol,currrow] = ind2sub([ncols,nrows],j-n+1);
-                disp([currrow,currcol])
                 left = (currcol - 1) * (subplotWidth + hSpacing) + hSpacing;
                 bottom = 1 - (currrow * (subplotHeight + vSpacing));
                 
