@@ -158,6 +158,7 @@ f = figure;
 nrows = gridsize(1);
 ncols = gridsize(2);
 
+% nmontages = ceil((1+range(2)-range(1))/(nrows*ncols));
 nmontages = ceil((1+range(2)-range(1))/(nrows*ncols));
 n = range(1);
 disp(range(1))
@@ -469,10 +470,14 @@ while ~quitnow
             userinput = inputdlg('Enter movie number:', 'Movie number', [1 50]);
             userinput = str2double(userinput{1});
             if ~isnan(userinput)
-                m = floor(userinput/(nrows*ncols))+1;
-                n = (m-1)*nrows*ncols + 1;
-                save(outfile,'classification','range','masks','categories'); 
-                firstdraw = 1;
+                if (floor(userinput/(nrows*ncols))+1 >nmontages) | (floor(userinput/(nrows*ncols))+1 < 1)
+                    msgbox('FOV number out of range.')
+                else
+                    m = floor(userinput/(nrows*ncols))+1;
+                    n = (m-1)*nrows*ncols + 1;
+                    save(outfile,'classification','range','masks','categories'); 
+                    firstdraw = 1;
+                end
             else
                 disp('Please enter an integer.')
             end

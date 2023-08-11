@@ -11,13 +11,13 @@ input_files = glob('cell_by_cell_csvs_all/1/*csv')
 detections = load_detections(*input_files)
 settings = dict(
             likelihood_type = RBME,
-                pixel_size_um = 0.16,
-                    frame_interval = 0.00748,
-                        focal_depth = 0.7,
-                            start_frame = 0,
-                                progress_bar = True,
-                                    sample_size = 1e6,
-                                    )
+            pixel_size_um = 0.16,
+            frame_interval = 0.00748,
+            focal_depth = 0.7,
+            start_frame = 0,
+            progress_bar = True,
+            sample_size = 1e6,
+            )
 SA = StateArray.from_detections(detections, **settings)
 print(SA)
 print("Trajectory statistics:")
