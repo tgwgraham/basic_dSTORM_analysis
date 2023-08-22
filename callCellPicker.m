@@ -6,20 +6,22 @@ roifile = '../rois.txt';       % text file providing coordinates of SMT ROIs
 maskfolder = '../masks/';      % where cell masks are stored
                             % Note: This is not used if use_whole_roi is
                             % set to true.
-snapfolder2 = '../snaps2';     % second channel of snapshots (optional)
-snapfolder3 = '../snaps2';     % third channel of snapshots (optional)
+snapfolder2 = '../snaps4';     % second channel of snapshots (optional)
+snapfolder3 = '../snaps4';     % third channel of snapshots (optional)
 range = [];             % file number range to examine
 outfile = 'out.mat';        % where to store selection output
 gridsize=[2,3];             % size of image grid for display
 ncat = 2;                   % number of categories
-scale1 = [0,1e4];           % scale for display of first channel
-scale2 = [0,1e4];          % scale for display of second channel
-scale3 = [0,1e4];          % scale for display of thirdq channel
-use_whole_roi = true;      % set this option to true if you want to take 
+scale1 = [0,3e4];           % scale for display of first channel
+scale2 = [0,3e4];          % scale for display of second channel
+scale3 = [0,3e4];          % scale for display of thirdq channel
+use_whole_roi = false;      % set this option to true if you want to take 
                             % all of the trajectories from each imaged ROI
                             % rather than only selecting the ones that
                             % overlap the cell mask.
-tightplots = true;          % whether to use tight layout of plotsq
+tightplots = true;          % whether to use tight layout of plots
+defaultsel = true;          % whether to select the largest cell in the ROI
+                            % by default (selected in category 1)
 
 
                             
@@ -33,7 +35,8 @@ cellpicker(snapfolder,maskfolder,range,outfile,...
     'scale2',scale2,...
     'scale3',scale3,...
     'use_whole_roi',use_whole_roi,...
-    'tightplots',true);
+    'tightplots',tightplots,...
+    'defaultsel',defaultsel);
 
 % right arrow - move to next set of FOVs
 % left arrow - move to next set of FOVs

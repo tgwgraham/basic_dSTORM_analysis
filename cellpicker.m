@@ -77,6 +77,9 @@ function cellpicker(snapfolder,maskfolder,range,outfile,varargin)
 % 'tightplots' - If this is set to true, then plots will be displayed with tight
 % spacing
 %
+% 'defaultsel' - whether the largest cell in each FOV should be selected by
+% default as category number 1. Default: false
+%
 % Thomas Graham, Tjian-Darzacq Group, UC Berkeley
 % 20230526
 
@@ -92,6 +95,7 @@ addOptional(p,'scale3',[]);
 addOptional(p,'placeholderim',magic(256)/65536);
 addOptional(p,'use_whole_roi',false);
 addOptional(p,'tightplots',false);
+addOptional(p,'defaultsel',false);
 parse(p,varargin{:});
 
 gridsize = p.Results.gridsize;
@@ -105,6 +109,7 @@ scale3 = p.Results.scale3;
 placeholderim = p.Results.placeholderim;
 use_whole_roi = p.Results.use_whole_roi;
 tightplots = p.Results.tightplots;
+defaultsel = p.Results.defaultsel;
 
 rois = dlmread(roifile);
 
@@ -145,7 +150,11 @@ if exist(outfile,'file')
 else
     % in this version the classification array and masks cell array will
     % start at 1, even if the range of movies does not
-    classification = zeros(1,range(2));
+    if defaultsel % if everything is selected by default, mark all selected
+        classification = ones(1,range(2));
+    else  % otherwise, mark none selected
+        classification = zeros(1,range(2));
+    end
     masks = cell(1,range(2));
     if ~isempty(roifile) % only output a "roimasks" variable if roifile is defined
         roimasks = cell(1,range(2));
@@ -238,6 +247,8 @@ while ~quitnow
                     seg = csvread(segf);
                 end
                 masks{j} = seg;
+                % TODO: SET CLASSIFICATION OF LARGEST CELL IN ROI TO BE
+                % CATEGORY 2
             else
                 seg = masks{j};
             end
@@ -306,8 +317,25 @@ while ~quitnow
             
             celloutlines{end+1} = [];
                        
+            % draw ROI rectangle and output smaller mask for ROI if roifile is specified
+            if ~isempty(roifile)
+                curroi = rois(j,:);
+                rectangle('Position',[curroi(1),curroi(2),curroi(3)-curroi(1),curroi(4)-curroi(2)],'LineWidth',1,'EdgeColor','w');
+                if isempty(roimasks{j})
+                    roimasks{j} = seg(curroi(2):curroi(4),curroi(1):curroi(3));
+                end
+            end
+            
             if isempty(categories{j})
                 categories{j} = zeros(1,max(seg(:))); % initialize all category classifications to 0
+                
+                % if the largest cell in the ROI is selected by default,
+                % then set its category to 1
+                if defaultsel 
+                    largest_cell_index = mode(roimasks{j}(roimasks{j}(:) ~= 0));
+                    categories{j}(largest_cell_index) = 1;
+                end
+                
             end
             
             for regind = 1:numel(categories{j})
@@ -332,14 +360,14 @@ while ~quitnow
                 set(rects(end),'EdgeColor',[0,0,0]);
             end
             
-            % draw ROI rectangle and output smaller mask for ROI if roifile is specified
-            if ~isempty(roifile)
-                curroi = rois(j,:);
-                rectangle('Position',[curroi(1),curroi(2),curroi(3)-curroi(1),curroi(4)-curroi(2)],'LineWidth',1,'EdgeColor','w');
-                if isempty(roimasks{j})
-                    roimasks{j} = seg(curroi(2):curroi(4),curroi(1):curroi(3));
-                end
-            end
+%             % draw ROI rectangle and output smaller mask for ROI if roifile is specified
+%             if ~isempty(roifile)
+%                 curroi = rois(j,:);
+%                 rectangle('Position',[curroi(1),curroi(2),curroi(3)-curroi(1),curroi(4)-curroi(2)],'LineWidth',1,'EdgeColor','w');
+%                 if isempty(roimasks{j})
+%                     roimasks{j} = seg(curroi(2):curroi(4),curroi(1):curroi(3));
+%                 end
+%             end
             
             
 
