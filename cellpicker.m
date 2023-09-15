@@ -333,7 +333,9 @@ while ~quitnow
                 % then set its category to 1
                 if defaultsel 
                     largest_cell_index = mode(roimasks{j}(roimasks{j}(:) ~= 0));
-                    categories{j}(largest_cell_index) = 1;
+                    if ~isnan(largest_cell_index)
+                        categories{j}(largest_cell_index) = 1;
+                    end
                 end
                 
             end
