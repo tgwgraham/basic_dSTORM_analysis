@@ -322,7 +322,7 @@ while ~quitnow
                 curroi = rois(j,:);
                 rectangle('Position',[curroi(1),curroi(2),curroi(3)-curroi(1),curroi(4)-curroi(2)],'LineWidth',1,'EdgeColor','w');
                 if isempty(roimasks{j})
-                    roimasks{j} = seg(curroi(2):curroi(4),curroi(1):curroi(3));
+                    roimasks{j} = seg(curroi(2)+1:curroi(4),curroi(1)+1:curroi(3));
                 end
             end
             
