@@ -170,7 +170,6 @@ ncols = gridsize(2);
 % nmontages = ceil((1+range(2)-range(1))/(nrows*ncols));
 nmontages = ceil((1+range(2)-range(1))/(nrows*ncols));
 n = range(1);
-disp(range(1))
 m = 0;
 firstdraw = 1;
 channelnum = 2;
@@ -296,24 +295,6 @@ while ~quitnow
                 
             set(get(gca,'Toolbar'),'Visible','off')
             
-            if tightplots
-                
-                hSpacing = 0.01;  % Horizontal spacing
-                vSpacing = 0.05;  % Vertical spacing
-                
-                subplotWidth = (1 - (ncols + 1) * hSpacing) / ncols;
-                subplotHeight = (1 - (nrows + 1) * vSpacing) / nrows;
-                
-                [currcol,currrow] = ind2sub([ncols,nrows],j-n+1);
-                left = (currcol - 1) * (subplotWidth + hSpacing) + hSpacing;
-                bottom = 1 - (currrow * (subplotHeight + vSpacing));
-                
-%                 width = 1/2 - hSpacing;
-%                 height = 1/2 - vSpacing;
-
-                set(gca,'Position',[left, bottom, subplotWidth, subplotHeight])
-                
-            end
             
             celloutlines{end+1} = [];
                        
@@ -378,6 +359,23 @@ while ~quitnow
             title(sprintf('FOV %d (%d, %d)',j,minpx,maxpx),'Color',titlecolor);
             set(gcf,'name',sprintf('Cells %d to %d of %d.',n,min(n+nrows*ncols-1, range(2)),range(2)))
         end
+
+        if tightplots
+
+            hSpacing = 0.01;  % Horizontal spacing
+            vSpacing = 0.05;  % Vertical spacing
+
+            subplotWidth = (1 - (ncols + 1) * hSpacing) / ncols;
+            subplotHeight = (1 - (nrows + 1) * vSpacing) / nrows;
+
+            for j=1:numel(handles)
+                [currcol,currrow] = ind2sub([ncols,nrows],j);
+                left = (currcol - 1) * (subplotWidth + hSpacing) + hSpacing;
+                bottom = 1 - (currrow * (subplotHeight + vSpacing));
+                set(handles(j),'Position',[left, bottom, subplotWidth, subplotHeight])
+            end
+        end
+
         firstdraw = 0;
     end
     
