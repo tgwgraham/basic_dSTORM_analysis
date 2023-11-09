@@ -1054,7 +1054,7 @@ Pandas DataFrame containing two columns:
                 print(f'Encountered a problem with file number {f}.')
     return rv      
 
-def measurements_and_GV(foldername,nframes,config,measfile,outfbase=''):
+def measurements_and_GV(foldername,nframes,config,measfile,outfbase='',ncategories=1):
     """
 measurements_and_GV(foldername,nframes,config,measfile,outf='GV_by_cell.csv')
 
@@ -1063,14 +1063,15 @@ foldername - name of the folder containing molecule tracking csv files
 nframes - number of frames per movie
 config - configuration dictionary containing PAPA cycle parameters
 measfile - CSV file containing pooled measurements for selected cells (output of classify_and_write_csv)
-outf - base file name for output files
+outfbase - base file name for output files. Default = ''
+ncategories - number of categories into which cells have been classified by the user. Default = 1
 
 Outputs:
 - Returns a DataFrame containing measurements of each selected cell together with localizations per frame (1D Numpy array), total green and violet localization counts, and green-to-violet ratio.
 - Saves this DataFrame (without the localizations per frame column) to a CSV file called outfbase + "gv_by_cell.csv"
 - Saves the complete localizations per frame data to another CSV file called outfbase + "locsperframe.csv". The first two columns are FOV number and cell number.
 """
-    locs = locsPerFrame(foldername,nframes)
+    locs = locsPerFrame(foldername,nframes,ncategories=ncategories)
     
     # extract the FOV and cell numbers from the file names
     extracted_numbers = locs['file_name'].str.extract(r'.*/(\d+)_(\d+)\.csv$')
