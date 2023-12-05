@@ -404,7 +404,7 @@ def makeSA_sorted_sameN(config,sortedFolder='sortedTrajectories',
     return [SAD,paths]
   
 
-def analyze_PAPA_DR_stateArray(config,sortedFolder='sortedTrajectories',nworkers=1):
+def analyze_PAPA_DR_stateArray(config,sortedFolder='sortedTrajectories',nworkers=1,closefig=False):
     """
     [SAD,posterior_occs,condition_names] = 
         analyze_PAPA_DR_stateArray(config,sortedFolder='sortedTrajectories',nworkers=1):
@@ -436,7 +436,7 @@ def analyze_PAPA_DR_stateArray(config,sortedFolder='sortedTrajectories',nworkers
     print('Inferring posterior probability by condition.')
     posterior_occs, condition_names = SAD.infer_posterior_by_condition('condition')
     D = SAD.likelihood.diff_coefs
-    plot_PAPA_DR(config,D,posterior_occs,condition_names,'figures')
+    plot_PAPA_DR(config,D,posterior_occs,condition_names,'figures',closefig=closefig)
     with open('state_array_pickle','wb') as fh:
         pickle.dump([SAD,posterior_occs,condition_names],fh)
     # to do: Write this all out to csv files as well
@@ -445,7 +445,7 @@ def analyze_PAPA_DR_stateArray(config,sortedFolder='sortedTrajectories',nworkers
 
 def analyze_PAPA_DR_stateArray_sameN(config,sortedFolder='sortedTrajectories',
                 subsampledFolder='subsampledTrajectories',
-                nworkers=1,randseed=None,ignoreOther = False):
+                nworkers=1,randseed=None,ignoreOther = False,closefig=False):
     """
     [SAD,posterior_occs,condition_names] = 
         analyze_PAPA_DR_stateArray_sameN2(config,sortedFolder='sortedTrajectories',nworkers=1
@@ -477,13 +477,13 @@ def analyze_PAPA_DR_stateArray_sameN(config,sortedFolder='sortedTrajectories',
     print('Inferring posterior probability by condition.')
     posterior_occs, condition_names = SAD.infer_posterior_by_condition('condition')
     D = SAD.likelihood.diff_coefs
-    plot_PAPA_DR(config,D,posterior_occs,condition_names,'figures_sameN')
+    plot_PAPA_DR(config,D,posterior_occs,condition_names,'figures_sameN',closefig=closefig)
     with open('state_array_sameN_pickle','wb') as fh:
         pickle.dump([SAD,posterior_occs,condition_names],fh)
     # to do: Write this all out to csv files as well
     return [SAD,posterior_occs,condition_names]
 
-def plot_PAPA_DR(config,D,posterior_occs,condition_names,figfname='figures'):
+def plot_PAPA_DR(config,D,posterior_occs,condition_names,figfname='figures',closefig=False):
     """
     plot_PAPA_DR(config,D,posterior_occs,condition_names,figfname)
     
@@ -493,6 +493,8 @@ def plot_PAPA_DR(config,D,posterior_occs,condition_names,figfname='figures'):
         posterior_occs  :   list of lists of posterior occupations
         condition_names :   list of associated condition names
         figfname    :   name of output folder for storing figures
+        closefig    : whether to close figure when the function exits (e.g., if running 
+                        from a command line script
     """
     
     # get posterior occupations for each condition
@@ -531,10 +533,11 @@ def plot_PAPA_DR(config,D,posterior_occs,condition_names,figfname='figures'):
         plt.xlabel('Diffusion coefficient ($\mu$m$^{2}$ s$^{-1}$)')
         plt.ylabel('Mean posterior occupation')
         plt.savefig(figfname + '/PAPA_vs_DR_Dspectra/%s.png' % c,format='png',bbox_inches='tight')
-        
+        if closefig:
+            plt.close()
 
 # TODO: Add option to overlay plots for each individual experiment in the condition
-def plot_Nlocs_wholemovie(config,locsbyframe,figfname='figures'):
+def plot_Nlocs_wholemovie(config,locsbyframe,figfname='figures',closefig=False):
     """
     plot_Nlocs_wholemovie(config)
     
@@ -543,7 +546,8 @@ def plot_Nlocs_wholemovie(config,locsbyframe,figfname='figures'):
         locsbyframe     :   dataframe containing localizations per frame for each file
                         (output of getLocsByFrameDF)
         figfname:   folder name for storing figures
-        
+        closefig        : whether to close figure when the function exits (e.g., if running 
+                            from a command line script
     For each condition specified in config, makes a plot of average number of localizations 
     as a function of frame number.
     """
@@ -578,11 +582,12 @@ def plot_Nlocs_wholemovie(config,locsbyframe,figfname='figures'):
         plt.xlabel('Frame number')
         plt.ylabel('Mean localization number')
         plt.savefig(figfname + '/locsperframe/%s.png' % c,format='png',bbox_inches='tight')
-        
+        if closefig:
+            plt.close()
         
         
 
-def plot_Nlocs_bycycle_colors(config,locsbyframe,figfname='figures',byexperiment=True):
+def plot_Nlocs_bycycle_colors(config,locsbyframe,figfname='figures',byexperiment=True,closefig=False):
     """
     plot_Nlocs_wholemovie(config,locsbyframe,figfname='figures')
     
@@ -595,7 +600,8 @@ def plot_Nlocs_bycycle_colors(config,locsbyframe,figfname='figures',byexperiment
         figfname        :   folder name for storing figures
         byexperiment    : whether to also plot number of localizations by cycle for each
                             experiment within a condition
-        
+        closefig        : whether to close figure when the function exits (e.g., if running 
+                            from a command line script
     For each condition specified in config, makes a plot of average number of localizations 
     as a function of frame number.
     
@@ -674,7 +680,8 @@ def plot_Nlocs_bycycle_colors(config,locsbyframe,figfname='figures',byexperiment
         plt.xlabel('Frame number')
         plt.ylabel('Mean localization number')
         plt.savefig(f'{figfname}/locsperframe_cycle/{c}.png',format='png',bbox_inches='tight')
-        
+        if closefig:
+            plt.close()
 
 # TODO: update with new configuration file format with multiple experiments within each condition
 def get_ND2_times(config):
@@ -1009,7 +1016,7 @@ returns a dataframe with cell measurements for each FOV
                 rv = df
                 isfirst = False
             else:
-                rv = rv.append(df,ignore_index=True)
+                rv = pd.concat((rv,df),ignore_index=True)
             
         except Exception as e:
             print(f"Error with FOV {j}:", str(e))
@@ -1049,7 +1056,7 @@ Pandas DataFrame containing two columns:
                     rv = df
                     isfirst=False
                 else:
-                    rv = rv.append(df,ignore_index=True)
+                    rv = pd.concat((rv,df),ignore_index=True)
             except:
                 print(f'Encountered a problem with file number {f}.')
     return rv      
