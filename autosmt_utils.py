@@ -653,11 +653,11 @@ def plot_Nlocs_bycycle_colors(config,locsbyframe,figfname='figures',byexperiment
         plt.figure(c)
         plt.title(config['conditions'][c]['title'])
 
-        plt.plot(framenums1,meanlocs[framenums1],'k-')
-        plt.plot(framenums2,meanlocs[framenums2],'k-')
-        plt.plot(framenums3,meanlocs[framenums3],'k-')
-        plt.plot(framenums_violet,meanlocs[framenums_violet],'-',color='blueviolet')
-        plt.plot(framenums_green,meanlocs[framenums_green],'-',color='green')
+        plt.plot(framenums1,meanlocs_cycle[framenums1],'k-')
+        plt.plot(framenums2,meanlocs_cycle[framenums2],'k-')
+        plt.plot(framenums3,meanlocs_cycle[framenums3],'k-')
+        plt.plot(framenums_violet,meanlocs_cycle[framenums_violet],'-',color='blueviolet')
+        plt.plot(framenums_green,meanlocs_cycle[framenums_green],'-',color='green')
         
         if byexperiment:
             for e in currlocs['experiment'].unique():
@@ -668,12 +668,12 @@ def plot_Nlocs_bycycle_colors(config,locsbyframe,figfname='figures',byexperiment
                 np.savetxt(f'{figfname}/locsperframe_cycle/{c}_{e}.csv', 
                             meanlocs_cycle, delimiter=',')
                 
-                plt.plot(framenums1,meanlocs[framenums1],'k-',linewidth=0.5)
-                plt.plot(framenums2,meanlocs[framenums2],'k-',linewidth=0.5)
-                plt.plot(framenums3,meanlocs[framenums3],'k-',linewidth=0.5)
-                plt.plot(framenums_violet,meanlocs[framenums_violet],
+                plt.plot(framenums1,meanlocs_cycle[framenums1],'k-',linewidth=0.5)
+                plt.plot(framenums2,meanlocs_cycle[framenums2],'k-',linewidth=0.5)
+                plt.plot(framenums3,meanlocs_cycle[framenums3],'k-',linewidth=0.5)
+                plt.plot(framenums_violet,meanlocs_cycle[framenums_violet],
                             '-',color='blueviolet',linewidth=0.5)
-                plt.plot(framenums_green,meanlocs[framenums_green],
+                plt.plot(framenums_green,meanlocs_cycle[framenums_green],
                             '-',color='green',linewidth=0.5)
 
         
