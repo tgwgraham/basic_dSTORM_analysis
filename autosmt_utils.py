@@ -433,6 +433,7 @@ def analyze_PAPA_DR_stateArray(config,sortedFolder='sortedTrajectories',nworkers
     import pickle
         
     [SAD,paths]=makeStateArrayDataset(config,sortedFolder=sortedFolder,nworkers=nworkers,isPAPA=True)
+    SAD.raw_track_statistics.to_csv('track_statistics.csv')
     print('Inferring posterior probability by condition.')
     posterior_occs, condition_names = SAD.infer_posterior_by_condition('condition')
     D = SAD.likelihood.diff_coefs
@@ -474,6 +475,7 @@ def analyze_PAPA_DR_stateArray_sameN(config,sortedFolder='sortedTrajectories',
     
     [SAD,paths]=makeSA_sorted_sameN(config,sortedFolder=sortedFolder,
            nworkers=nworkers,randseed=randseed,ignoreOther=ignoreOther)
+    SAD.raw_track_statistics.to_csv('track_statistics_sameN.csv')
     print('Inferring posterior probability by condition.')
     posterior_occs, condition_names = SAD.infer_posterior_by_condition('condition')
     D = SAD.likelihood.diff_coefs
