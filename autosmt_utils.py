@@ -443,9 +443,12 @@ def analyze_PAPA_DR_stateArray(config,sortedFolder='sortedTrajectories',nworkers
     import pickle
         
     [SAD,paths]=makeStateArrayDataset(config,sortedFolder=sortedFolder,nworkers=nworkers,isPAPA=True)
-    rts = SAD.raw_track_statistics
-    rts.to_csv('track_statistics.csv')
-    plot_track_report_PAPA(config,rts,figfname='figures',closefig=closefig)
+    try: # The following is annoyingly going to throw an error if you have no trajectories in some files.
+        rts = SAD.raw_track_statistics
+        rts.to_csv('track_statistics.csv')
+        plot_track_report_PAPA(config,rts,figfname='figures',closefig=closefig)
+    except:
+        print('Error in making track statistics report.')
     print('Inferring posterior probability by condition.')
     posterior_occs, condition_names = SAD.infer_posterior_by_condition('condition')
     D = SAD.likelihood.diff_coefs
