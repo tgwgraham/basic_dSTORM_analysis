@@ -368,12 +368,22 @@ def makeSA_sorted_sameN(config,sortedFolder='sortedTrajectories',
             print(f'PAPA trajectories: {ntraj[0]}')
             print(f'DR trajectories: {ntraj[1]}')
             print
+            
+            with open('ntraj.txt', 'w') as fh:
+                fh.write(f'Number of trajectories in condition {c}\n')
+                fh.write(f'PAPA trajectories: {ntraj[0]}\n')
+                fh.write(f'DR trajectories: {ntraj[1]}\n')
         else:
             print(f'Number of trajectories in condition {c}')
             print(f'PAPA trajectories: {ntraj[0]}')
             print(f'DR trajectories: {ntraj[1]}')
             print(f'Other trajectories: {ntraj[2]}')
         
+            with open('ntraj.txt', 'w') as fh:
+                fh.write(f'Number of trajectories in condition {c}\n')
+                fh.write(f'PAPA trajectories: {ntraj[0]}\n')
+                fh.write(f'DR trajectories: {ntraj[1]}\n')
+                fh.write(f'Other trajectories: {ntraj[2]}\n')
         
         # export all trajectories from the condition with the fewest trajectories
         # subsample the same number from the two other conditions
@@ -433,7 +443,9 @@ def analyze_PAPA_DR_stateArray(config,sortedFolder='sortedTrajectories',nworkers
     import pickle
         
     [SAD,paths]=makeStateArrayDataset(config,sortedFolder=sortedFolder,nworkers=nworkers,isPAPA=True)
-    SAD.raw_track_statistics.to_csv('track_statistics.csv')
+    rts = SAD.raw_track_statistics
+    rts.to_csv('track_statistics.csv')
+    plot_track_report_PAPA(config,rts,figfname='figures',closefig=closefig)
     print('Inferring posterior probability by condition.')
     posterior_occs, condition_names = SAD.infer_posterior_by_condition('condition')
     D = SAD.likelihood.diff_coefs
@@ -1119,6 +1131,93 @@ Outputs:
     np.savetxt(outfbase + "locsperframe.csv",combined_for_output,delimiter=',')
     
     return combined_df
+
+
+def plot_track_report_PAPA(config,raw_track_statistics,figfname='figures',closefig=False):
+    # plot_track_report_PAPA(config,raw_track_statistics,figfname='figures',closefig=False)
+    #
+    # Makes plots for quality control of SMT data
+    #
+    # Inputs:
+    # config - configuration dictionary (typically from analysis_settings.toml file)
+    # raw_track_statistics - raw_track_statistics dataframe from StateArrayDataset object
+    # figfname - base file name for saving the figures
+    # closefig - whether to close the figure after creating it (set to True for running this in batch mode)
+    #
+    # Output: A PNG file with four columns plotting
+    # 1) Mean track length
+    # 2) Total number of detections
+    # 3) Total number of trajectories
+    # 4) Fraction of singlets
+    # 
+    # This assumes that the same CSV files will be represented among the PAPA and DR rows of raw_track_statistics (which is normally the case)
+    
+    from matplotlib import pyplot as plt
+    
+    df = raw_track_statistics
+    for c in config['conditions']:
+        curr_dr = df[df['condition']==c+'_DR']
+        curr_papa = df[df['condition']==c+'_PAPA']
+        fig,axs = plt.subplots(1,4,figsize=(10,6))
+        plt.subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.4, hspace=0.3)
+
+        ind = curr_dr.index.to_numpy() 
+
+        axs[0].plot(curr_dr['mean_track_length'].to_numpy(),ind,'.',color='darkviolet')
+        max0 = 1.2*curr_dr['mean_track_length'].max()
+        axs[0].set_xlim([0,max0])
+        axs[0].set_ylabel('File number',fontsize=12)
+        axs[0].set_xlabel('Mean track length',fontsize=12)
+
+        axs[1].plot(curr_dr['n_detections'].to_numpy(),ind,'.',color='darkviolet')
+        max1 = 1.2*curr_dr['n_detections'].max()
+        axs[1].set_xlim([0,max1])
+        axs[1].set_xlabel('# Detections',fontsize=12)
+
+        axs[2].plot(curr_dr['n_tracks'].to_numpy(),ind,'.',color='darkviolet')
+        max2 = 1.2*curr_dr['n_tracks'].max()
+        axs[2].set_xlim([0,max2])
+        axs[2].set_xlabel('# Trajectories',fontsize=12)
+
+        axs[3].plot(curr_dr['fraction_singlets'].to_numpy(),ind,'.',color='darkviolet')
+        max3 = 1.2*curr_dr['fraction_singlets'].max()
+        axs[3].set_xlim([0,max3])
+        axs[3].set_xlabel('Fraction singlets',fontsize=12)
+
+        # The following deals with the (atypical) case that the DR and PAPA rows are not in the same order.
+        drpaths = np.array([os.path.basename(x) for x in curr_dr['filepath'].to_numpy()])
+        papapaths = np.array([os.path.basename(x) for x in curr_papa['filepath'].to_numpy()])
+        ind2 = np.array([np.where(x==drpaths)[0][0] for x in papapaths])
+        ind = ind[ind2]
+        
+        axs[0].plot(curr_papa['mean_track_length'].to_numpy(),ind,'.',color='green')
+        axs[0].set_xlim([0,max(max0,1.2*curr_papa['mean_track_length'].max())])
+        axs[0].set_ylabel('File number',fontsize=12)
+        axs[0].set_xlabel('Mean track length',fontsize=12)
+
+        axs[1].plot(curr_papa['n_detections'].to_numpy(),ind,'.',color='green')
+        axs[1].set_xlim([0,max(1.2*curr_papa['n_detections'].max(),max1)])
+        axs[1].set_xlabel('# Detections',fontsize=12)
+
+        axs[2].plot(curr_papa['n_tracks'].to_numpy(),ind,'.',color='green')
+        axs[2].set_xlim([0,max(1.2*curr_papa['n_tracks'].max(),max2)])
+        axs[2].set_xlabel('# Trajectories',fontsize=12)
+
+        axs[3].plot(curr_papa['fraction_singlets'].to_numpy(),ind,'.',color='green')
+        axs[3].set_xlim([0,max(1.2*curr_papa['fraction_singlets'].max(),max3)])
+        axs[3].set_xlabel('Fraction singlets',fontsize=12)
+
+        for ax in axs:
+            ax.tick_params(axis='both', labelsize=12)
+            
+        fig.suptitle(c, fontsize=16)
+
+        if not os.path.isdir(figfname + '/track_reports'):
+            os.mkdir(figfname + '/track_reports')
+        plt.savefig(figfname + '/track_reports/%s.png' % c,format='png',bbox_inches='tight')
+        if closefig:
+            plt.close()
+
 
 
 
