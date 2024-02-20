@@ -1222,10 +1222,107 @@ def plot_track_report_PAPA(config,raw_track_statistics,figfname='figures',closef
             plt.close()
 
 
+def getND2bounds(fname):
+    # getND2bounds(fname)
+    #
+    # Low-level function that gets bounds of imaging ROI from an ND2 file
+    # Return value is a list with left, top, right, and bottom pixel bounds in that order
+        
+    bytesfromend = int(1e6) # where to start reading in the metadata relative the end of the file
+
+    # pattern to match in the metadata at the end of the ND2 file
+    patternLeft = r"<Left runtype=\"lx_int32\" value=\"(.+?)\"/>" 
+    patternRight = r"<Right runtype=\"lx_int32\" value=\"(.+?)\"/>" 
+    patternTop = r"<Top runtype=\"lx_int32\" value=\"(.+?)\"/>" 
+    patternBottom = r"<Bottom runtype=\"lx_int32\" value=\"(.+?)\"/>" 
+
+    with open(fname, "rb") as file:
+        # Read the bytes at the end of the file
+        file.seek(os.path.getsize(fname)-bytesfromend)
+        bytes = file.read()
+        decoded = bytes.decode(errors='ignore')
+        
+        left = re.findall(patternLeft, decoded)
+        right = re.findall(patternRight, decoded)
+        top = re.findall(patternTop, decoded)
+        bottom = re.findall(patternBottom, decoded)
+        
+        #print(f"{currfname} {numbers}")
+        if not left or not right or not top or not bottom:
+            return []
+        else:
+            return [int(left[0]),int(top[0]),int(right[0]),int(bottom[0])]
 
 
+def getAllIntensities(moviebasefname,maskmat):
+    # getAllIntensities(moviebasefname,maskmat)
+    # Measure intensities within cell masks for all frames in all movies in a dataset
+    #
+    # Inputs:
+    # moviebasefname - base file name for all movies
+    # maskmat - MATLAB .mat file containing selected masks from cell selection
+    #
+    # Output:
+    # dataframe containing file names, category that each cell was classified into by the user, and mask index 
+    # category 0, mask index 0 corresponds to background pixels that were not in any mask
 
+    masks = scipy.io.loadmat(maskmat)
 
+    intdf = pd.DataFrame({'filename':[], 
+                         'category':[], 
+                          'maskind':[], 
+                          'intensities':[], 
+                         }) # data frame of intensities
+
+    # Loop over all movies
+    for j in range(masks['categories'].size):
+
+        # open current list of cell categorizations
+        currcat = masks['categories'][0][j][0]
+
+        # identify which mask indices have category not equal to zero
+        goodind = [k for k in range(currcat.size) if currcat[k] != 0]
+        goodind = np.array(goodind)
+
+        # if there are cells selected
+        if goodind.size > 0:
+            # open associated ND2 file
+            f = f'{moviebasefname}{j+1}.nd2' # convert to 1-indexing
+            with ND2Reader(f) as images:
+                nframes = len(images.timesteps)
+
+            # loop over selected cells and initialize dataframe rows
+            newrows = pd.DataFrame({'filename':[], 'category':[], 'maskind':[], 'intensities':[]})
+            currmask = masks['masks'][0][j]
+            maskbounds = getND2bounds(f)
+            currmask = currmask[maskbounds[1]:maskbounds[3],maskbounds[0]:maskbounds[2]]
+            newrows = {}
+            for g in goodind:
+                masksize = (currmask==(g+1)).sum() # add 1 to correspond to MATLAB indexing
+                # convert to 1-indexing
+                newrows[g] = {'filename':f'{j+1}.nd2', 'category': currcat[g], 'maskind':g+1, 'masksize':masksize, 'intensities':np.zeros(nframes) } 
+            # include a row for background (zero) pixels
+            # convert to 1-indexing
+            newrows[0] = {'filename':f'{j+1}.nd2', 'category':0, 'maskind':0, 'masksize':(currmask==(g+1)).sum(), 'intensities':np.zeros(nframes) } 
+
+            # loop over frames, and add intensities to corresponding dataframe rows
+            with ND2Reader(f) as images:
+                for frame in range(nframes):
+                    # get current frame
+                    im = images.get_frame_2D(t=frame).astype('float')
+
+                    # loop over selected cells, and integrate intensity in each mask
+                    for g in goodind:
+                        # determine sum of pixels within current mask
+                        currint = im[currmask==(g+1)].sum()
+                        newrows[g]['intensities'][frame] = currint
+                    # determine sum of pixels within background (zero) mask
+                    currint = im[currmask==0].sum()
+                    newrows[0]['intensities'][frame] = currint
+
+            for key in newrows.keys():
+                intdf = intdf.append(newrows[key], ignore_index=True)
+    return intdf
 
 
 
