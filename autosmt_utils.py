@@ -12,6 +12,7 @@ import numpy as np
 from glob import glob
 import scipy.io
 import traceback
+from nd2reader import ND2Reader
 
 
 def read_config(path):
