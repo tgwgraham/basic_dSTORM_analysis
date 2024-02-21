@@ -1301,7 +1301,7 @@ def getAllIntensities(moviebasefname,maskmat):
             for g in goodind:
                 masksize = (currmask==(g+1)).sum() # add 1 to correspond to MATLAB indexing
                 # convert to 1-indexing
-                newrows[g] = {'filename':f'{j+1}.nd2', 'category': currcat[g], 'maskind':g+1, 'masksize':masksize, 'intensities':np.zeros(nframes) } 
+                newrows[g+1] = {'filename':f'{j+1}.nd2', 'category': currcat[g], 'maskind':g+1, 'masksize':masksize, 'intensities':np.zeros(nframes) } 
             # include a row for background (zero) pixels
             # convert to 1-indexing
             newrows[0] = {'filename':f'{j+1}.nd2', 'category':0, 'maskind':0, 'masksize':(currmask==(g+1)).sum(), 'intensities':np.zeros(nframes) } 
@@ -1316,7 +1316,7 @@ def getAllIntensities(moviebasefname,maskmat):
                     for g in goodind:
                         # determine sum of pixels within current mask
                         currint = im[currmask==(g+1)].sum()
-                        newrows[g]['intensities'][frame] = currint
+                        newrows[g+1]['intensities'][frame] = currint
                     # determine sum of pixels within background (zero) mask
                     currint = im[currmask==0].sum()
                     newrows[0]['intensities'][frame] = currint
