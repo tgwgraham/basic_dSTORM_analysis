@@ -111,7 +111,11 @@ use_whole_roi = p.Results.use_whole_roi;
 tightplots = p.Results.tightplots;
 defaultsel = p.Results.defaultsel;
 
-rois = dlmread(roifile);
+if ~isempty(roifile)
+    rois = dlmread(roifile);
+else
+    rois = [];
+end
 
 % Define colorblind-friendly RGB values
 color1 = [0, 86, 149] ./ 255;   % Dark blue
@@ -237,11 +241,15 @@ while ~quitnow
 
             if isempty(masks{j})
                 if use_whole_roi
-                    % if it is set to use the whole imaged ROI, then create
-                    % a mask for this
-                    curroi = rois(j,:);
-                    seg = zeros(size(im));
-                    seg(curroi(2):curroi(4),curroi(1):curroi(3)) = 1;
+                    if ~isempty(rois)
+                        % if it is set to use the whole imaged ROI, then create
+                        % a mask for this
+                        curroi = rois(j,:);
+                        seg = zeros(size(im));
+                        seg(curroi(2):curroi(4),curroi(1):curroi(3)) = 1;
+                    else
+                        seg = ones(size(im));
+                    end
                 else
                     seg = csvread(segf);
                 end
@@ -307,15 +315,17 @@ while ~quitnow
                 end
             end
             
-            if isempty(categories{j})
+            if isempty(categories{j}) 
                 categories{j} = zeros(1,max(seg(:))); % initialize all category classifications to 0
                 
-                % if the largest cell in the ROI is selected by default,
-                % then set its category to 1
-                if defaultsel 
-                    largest_cell_index = mode(roimasks{j}(roimasks{j}(:) ~= 0));
-                    if ~isnan(largest_cell_index)
-                        categories{j}(largest_cell_index) = 1;
+                if ~isempty(rois)
+                    % if the largest cell in the ROI is selected by default,
+                    % then set its category to 1
+                    if defaultsel 
+                        largest_cell_index = mode(roimasks{j}(roimasks{j}(:) ~= 0));
+                        if ~isnan(largest_cell_index)
+                            categories{j}(largest_cell_index) = 1;
+                        end
                     end
                 end
                 
