@@ -1255,18 +1255,23 @@ def getND2bounds(fname):
             return [int(left[0]),int(top[0]),int(right[0]),int(bottom[0])]
 
 
-def getAllIntensities(moviebasefname,maskmat):
+def getAllIntensities(moviebasefname,maskmat=None):
     # getAllIntensities(moviebasefname,maskmat)
     # Measure intensities within cell masks for all frames in all movies in a dataset
     #
     # Inputs:
     # moviebasefname - base file name for all movies
     # maskmat - MATLAB .mat file containing selected masks from cell selection
+    #       If this is set to None, then the entire field of view will be used instead of masks
     #
     # Output:
     # dataframe containing file names, category that each cell was classified into by the user, and mask index 
     # category 0, mask index 0 corresponds to background pixels that were not in any mask
 
+    if maskmat == None:
+        # if maskmat is unspecified, return the total intensity over the entire field of view (i.e., un-masked)
+        return getAllIntensities_fullfield(moviebasefname)
+    
     masks = scipy.io.loadmat(maskmat)
 
     intdf = pd.DataFrame({'filename':[], 
@@ -1326,6 +1331,37 @@ def getAllIntensities(moviebasefname,maskmat):
     return intdf
 
 
+def getAllIntensities_fullfield(moviebasefname):
+    # Get sum of intensities of all pixels in all frames of a movie
+    
+    ##masks = scipy.io.loadmat(maskmat)
+    
+    fnames = glob(moviebasefname + "*nd2")
+
+    intdf = pd.DataFrame({'filename':[], 
+                         'category':[], 
+                          'maskind':[], 
+                          'intensities':[], 
+                         }) # data frame of intensities
+
+    # Loop over all movies
+    for f in fnames:
+
+        # loop over frames, and add intensities to corresponding dataframe rows
+        with ND2Reader(f) as images:
+            
+            nframes = len(images.timesteps)
+            
+            intensities = np.zeros(nframes)
+            for frame in range(nframes):
+                # get current frame
+                im = images.get_frame_2D(t=frame).astype('float')
+                intensities[frame] = im.sum()
+            newrow = {'filename':f, 'intensities':intensities } 
+            
+            intdf = intdf.append(newrow, ignore_index=True)
+            
+    return intdf
 
 
 
