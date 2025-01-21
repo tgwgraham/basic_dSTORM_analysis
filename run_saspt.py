@@ -21,8 +21,10 @@ settings = dict(
 SA = StateArray.from_detections(detections, **settings)
 print(SA)
 print("Trajectory statistics:")
-for k, v in SA.trajectories.processed_track_statistics.items():
-        print(f"{k : <20} : {v}")
+with open('traj_stats.txt','w') as fh:
+    for k, v in SA.trajectories.processed_track_statistics.items():
+            print(f"{k : <20} : {v}")
+            fh.write(f"{k : <20} : {v}\n")
 
 
 # make some output plots, and write the overall posterior occupations to a CSV file
